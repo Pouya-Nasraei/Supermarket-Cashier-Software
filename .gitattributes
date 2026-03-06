@@ -1,129 +1,135 @@
-from tkinter import *
+import json
+import tkinter as tk
 from tkinter import messagebox, simpledialog
-
-root = Tk()
-root.geometry('400x500')
-root.title("Customer's Bill")
-
-priceData = {
-    "BISCUIT": 2.5,
-    "CHICKEN": 4,
-    "EGG": 1,
-    "FISH": 5,
-    "COKE": 2,
-    "BREAD": 1.5,
-    "APPLE": 2,
-    "ONION": 3,
-    "ORANGE": 3,
-    "MILK": 2,
-    "CHOCOLATE": 1.5
-}
-
-shopping_data = {}
-total_price = 0
-
-def getProduct():
-    global total_price
-    product_name = productE.get().strip().upper()
-    try:
-        quantity = int(quantityE.get())
-    except ValueError:
-        if product_name == "":
-            messagebox.showerror("❌ Error", "Please enter a product!")
-        elif product_name not in priceData:
-            messagebox.showerror("Error", "The product is not in the stock!")
-        else:
-            messagebox.showerror("Error", "Please enter a valid quantity (number).")
-        return
-    if product_name in priceData:
-        price = priceData[product_name] * quantity
-        shopping_data[product_name] = shopping_data.get(product_name, 0) + quantity
-        total_price += price
-        updateShoppingList()
-    else:
-        messagebox.showinfo("Product not found", f"Product is not in the list!\n\nAvailable products:\n{list(priceData.keys())}")
-
-    # Clear entries and move cursor back to product entry
-    productE.delete(0, END)
-    quantityE.delete(0, END)
-    productE.focus()
+from datetime import datetime
 
 
-def updateShoppingList():
-    shoppingListL.config(text="")
-    display_text = "Shopping List:\n"
-    for item, qty in shopping_data.items():
-        display_text += f"{item} £{priceData[item]} x {qty} = £{priceData[item] * qty}\n"
-    display_text += f"\nTotal (before discount): £{total_price}"
-    shoppingListL.config(text = display_text)
+class CashierApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Customer Bill")
+        self.root.geometry("400x500")
+
+        self.products = self.load_products()
+        self.shopping_cart = {}
+        self.total_price = 0
+
+        self.create_gui()
+
+    def load_products(self):
+        try:
+            with open("products.json", "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            messagebox.showerror("Error", "products.json file not found!")
+            return {}
+
+    def save_receipt(self, final_price):
+        receipt_data = {
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "items": self.shopping_cart,
+            "total_before_discount": self.total_price,
+            "final_price": final_price
+        }
+
+        with open("receipt.json", "w") as file:
+            json.dump(receipt_data, file, indent=4)
+
+    def add_product(self):
+        product_name = self.product_entry.get().strip().upper()
+
+        try:
+            quantity = int(self.quantity_entry.get())
+        except ValueError:
+            messagebox.showerror("Error", "Enter a valid quantity (number).")
+            return
+
+        if product_name not in self.products:
+            messagebox.showerror("Error", "Product not found in stock.")
+            return
+
+        price = self.products[product_name] * quantity
+        self.shopping_cart[product_name] = self.shopping_cart.get(product_name, 0) + quantity
+        self.total_price += price
+
+        self.update_display()
+        self.clear_entries()
+        
+    def moveToQuantity(self, event):
+        self.product_entry.focus()
+
+    def apply_discount(self):
+        if self.total_price == 0:
+            messagebox.showinfo("Info", "No items added.")
+            return
+
+        membership = simpledialog.askstring("Membership", "Enter membership (Gold/Silver/Bronze):")
+        if not membership:
+            return
+
+        membership = membership.strip().upper()
+
+        discounts = {
+            "GOLD": 0.20,
+            "SILVER": 0.10,
+            "BRONZE": 0.05
+        }
+
+        discount = discounts.get(membership)
+        if discount is None:
+            messagebox.showerror("Error", "Invalid membership type.")
+            return
+
+        final_price = self.total_price * (1 - discount)
+        self.final_label.config(text=f"Final Price: £{final_price:.2f}")
+
+        self.save_receipt(final_price)
 
 
-def applyMembership():
-    """Ask user for membership and apply discount if total > £30."""
-    global total_price
-    if total_price == 0:
-        messagebox.showinfo("Info", "No items added yet!")
-        return
+    def update_display(self):
+        text = "Shopping List:\n"
+        for item, qty in self.shopping_cart.items():
+            price = self.products[item]
+            text += f"{item} £{price} x {qty} = £{price * qty}\n"
 
-    if total_price <= 30:
-        messagebox.showinfo("Info", "Discount applies only for totals above £30.")
-        finalBillL.config(text=f"Total to pay: £{total_price:.2f}")
-        return
+        text += f"\nTotal: £{self.total_price:.2f}"
+        self.display_label.config(text=text)
 
-    membership = simpledialog.askstring("Membership", "Enter membership type (Gold/Silver/Bronze):")
-    if not membership:
-        return
+    def clear_entries(self):
+        self.product_entry.delete(0, tk.END)
+        self.quantity_entry.delete(0, tk.END)
+        self.product_entry.focus()
 
-    membership = membership.strip().upper()
-    discount = 0
+    def create_gui(self):
+        tk.Label(self.root, text="Customer Bill", font=("Arial", 16, "bold")).pack(pady=10)
 
-    if membership == "GOLD":
-        discount = 0.20
-    elif membership == "SILVER":
-        discount = 0.10
-    elif membership == "BRONZE":
-        discount = 0.05
-    else:
-        messagebox.showinfo("Invalid", "Please enter 'Gold', 'Silver', or 'Bronze'.")
-        return
+        frame = tk.Frame(self.root)
+        frame.pack(pady=10)
 
-    final_price = total_price * (1 - discount)
-    finalBillL.config(text=f"Final Price after {int(discount * 100)}% discount:\n£{final_price:.2f}")
+        tk.Label(frame, text="Product").grid(row=0, column=0, padx=10)
+        self.product_entry = tk.Entry(frame)
+        self.product_entry.grid(row=1, column=0)
+
+        tk.Label(frame, text="Quantity").grid(row=0, column=1, padx=10)
+        self.quantity_entry = tk.Entry(frame)
+        self.quantity_entry.grid(row=1, column=1)
+        self.quantity_entry.bind("<Return>", lambda event: self.product_entry())
+
+        tk.Button(self.root, text="Add Product", command=self.add_product).pack(pady=10)
+
+        self.display_label = tk.Label(self.root, text="Shopping List:", justify="left")
+        self.display_label.pack(pady=10)
+
+        tk.Button(self.root, text="Apply Membership", command=self.apply_discount).pack(pady=10)
+
+        self.final_label = tk.Label(self.root, text="Final Price will appear here", font=("Arial", 12, "bold"))
+        self.final_label.pack(pady=15)
+
+        self.product_entry.focus()
 
 
-def moveToQuantity(event):
-    """When pressing Enter in product entry, move focus to quantity entry."""
-    quantityE.focus()
 
-# ------------------- GUI LAYOUT -------------------
-Label(root, text="Customer's Bill", font=("Arial", 18, "bold")).pack(pady=10)
-
-frame = Frame(root)
-frame.pack(pady=10)
-
-Label(frame, text="Product").grid(row=0, column=0, padx=10)
-productE = Entry(frame, width=15)
-productE.grid(row=1, column=0, padx=10)
-productE.bind("<Return>", moveToQuantity)   # Move focus on Enter
-
-Label(frame, text="Quantity").grid(row=0, column=1, padx=10)
-quantityE = Entry(frame, width=15, )
-quantityE.grid(row=1, column=1, padx=10)
-quantityE.bind("<Return>", lambda event: getProduct())
-
-enterProductBtn = Button(root, text="Enter Product", width=20, command=getProduct).pack(pady=10)
-
-shoppingListL = Label(root, text="Shopping List:", justify=LEFT, anchor="w", font=("Arial", 10))
-shoppingListL.pack(pady=10)
-
-Button(root, text="Membership", width=20, command=applyMembership).pack(pady=10)
-
-finalBillL = Label(root, text="Final Price will appear here", font=("Arial", 12, "bold"), fg="blue")
-finalBillL.pack(pady=15)
-
-Label(root, text="Thank you for shopping with us!", font=("Arial", 10), fg="gray").pack(pady=10)
-
-# Focus starts on the product entry
-productE.focus()
-
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = CashierApp(root)
+    root.mainloop()
