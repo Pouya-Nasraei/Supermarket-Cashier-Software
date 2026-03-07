@@ -1,0 +1,135 @@
+import json
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+from datetime import datetime
+
+
+class CashierApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Customer Bill")
+        self.root.geometry("400x500")
+
+        self.products = self.load_products()
+        self.shopping_cart = {}
+        self.total_price = 0
+
+        self.create_gui()
+
+    def load_products(self):
+        try:
+            with open("products.json", "r") as file:
+                return json.load(file)
+        except FileNotFoundError:
+            messagebox.showerror("Error", "products.json file not found!")
+            return {}
+
+    def save_receipt(self, final_price):
+        receipt_data = {
+            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "items": self.shopping_cart,
+            "total_before_discount": self.total_price,
+            "final_price": final_price
+        }
+
+        with open("receipt.json", "w") as file:
+            json.dump(receipt_data, file, indent=4)
+
+    def add_product(self):
+        product_name = self.product_entry.get().strip().upper()
+
+        try:
+            quantity = int(self.quantity_entry.get())
+        except ValueError:
+            messagebox.showerror("Error", "Enter a valid quantity (number).")
+            return
+
+        if product_name not in self.products:
+            messagebox.showerror("Error", "Product not found in stock.")
+            return
+
+        price = self.products[product_name] * quantity
+        self.shopping_cart[product_name] = self.shopping_cart.get(product_name, 0) + quantity
+        self.total_price += price
+
+        self.update_display()
+        self.clear_entries()
+        
+    def moveToQuantity(self, event):
+        self.product_entry.focus()
+
+    def apply_discount(self):
+        if self.total_price == 0:
+            messagebox.showinfo("Info", "No items added.")
+            return
+
+        membership = simpledialog.askstring("Membership", "Enter membership (Gold/Silver/Bronze):")
+        if not membership:
+            return
+
+        membership = membership.strip().upper()
+
+        discounts = {
+            "GOLD": 0.20,
+            "SILVER": 0.10,
+            "BRONZE": 0.05
+        }
+
+        discount = discounts.get(membership)
+        if discount is None:
+            messagebox.showerror("Error", "Invalid membership type.")
+            return
+
+        final_price = self.total_price * (1 - discount)
+        self.final_label.config(text=f"Final Price: £{final_price:.2f}")
+
+        self.save_receipt(final_price)
+
+
+    def update_display(self):
+        text = "Shopping List:\n"
+        for item, qty in self.shopping_cart.items():
+            price = self.products[item]
+            text += f"{item} £{price} x {qty} = £{price * qty}\n"
+
+        text += f"\nTotal: £{self.total_price:.2f}"
+        self.display_label.config(text=text)
+
+    def clear_entries(self):
+        self.product_entry.delete(0, tk.END)
+        self.quantity_entry.delete(0, tk.END)
+        self.product_entry.focus()
+
+    def create_gui(self):
+        tk.Label(self.root, text="Customer Bill", font=("Arial", 16, "bold")).pack(pady=10)
+
+        frame = tk.Frame(self.root)
+        frame.pack(pady=10)
+
+        tk.Label(frame, text="Product").grid(row=0, column=0, padx=10)
+        self.product_entry = tk.Entry(frame)
+        self.product_entry.grid(row=1, column=0)
+
+        tk.Label(frame, text="Quantity").grid(row=0, column=1, padx=10)
+        self.quantity_entry = tk.Entry(frame)
+        self.quantity_entry.grid(row=1, column=1)
+        self.quantity_entry.bind("<Return>", lambda event: self.product_entry())
+
+        tk.Button(self.root, text="Add Product", command=self.add_product).pack(pady=10)
+
+        self.display_label = tk.Label(self.root, text="Shopping List:", justify="left")
+        self.display_label.pack(pady=10)
+
+        tk.Button(self.root, text="Apply Membership", command=self.apply_discount).pack(pady=10)
+
+        self.final_label = tk.Label(self.root, text="Final Price will appear here", font=("Arial", 12, "bold"))
+        self.final_label.pack(pady=15)
+
+        self.product_entry.focus()
+
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = CashierApp(root)
+    root.mainloop()
