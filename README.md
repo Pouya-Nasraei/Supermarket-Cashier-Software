@@ -138,12 +138,12 @@ Key interface elements:
 ```
 Supermarket-Cashier-Software
 │
-├── main.py
+├── Cashier_final.py
 ├── products.json
 ├── receipt.json
 ├── images/
-│   ├── app-interface.png
-│   └── receipt-example.png
+│   ├── app-Image.png
+│   └── receipt.png
 └── README.md
 ```
 
@@ -166,7 +166,7 @@ cd Supermarket-Cashier-Software
 ### 3. Run the application
 
 ```
-python main.py
+python Cashier_final.py
 ```
 
 Python 3.8 or newer is recommended.
