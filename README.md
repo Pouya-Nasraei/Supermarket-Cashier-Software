@@ -24,7 +24,7 @@ The system loads available products from a local JSON file and dynamically calcu
 (Add screenshot here)
 
 ```
-![Application Interface](images/app-interface.png)
+![Application Interface](Images/app-Image.png)
 ```
 
 ### Example Receipt Output
@@ -32,7 +32,7 @@ The system loads available products from a local JSON file and dynamically calcu
 (Add screenshot here)
 
 ```
-![Receipt Example](images/receipt-example.png)
+![Receipt Example](Images/receipt.png)
 ```
 
 ---
