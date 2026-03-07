@@ -21,19 +21,11 @@ The system loads available products from a local JSON file and dynamically calcu
 
 ### Application Interface
 
-(Add screenshot here)
-
-```
 ![Application Interface](Images/app-Image.png)
-```
 
 ### Example Receipt Output
 
-(Add screenshot here)
-
-```
 ![Receipt Example](Images/receipt.png)
-```
 
 ---
 
