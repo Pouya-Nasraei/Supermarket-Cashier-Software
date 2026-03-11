@@ -1,0 +1,9 @@
+{
+    "date": "2026-03-11 14:11:52",
+    "items": {
+        "MILK": 2,
+        "BREAD": 1
+    },
+    "total_before_discount": 5.5,
+    "final_price": 4.4
+}

@@ -1,0 +1,10 @@
+{
+    "date": "2026-03-11 11:03:12",
+    "items": {
+        "MILK": 5,
+        "WATER": 7,
+        "BISCUIT": 7
+    },
+    "total_before_discount": 39.75,
+    "final_price": 31.8
+}
