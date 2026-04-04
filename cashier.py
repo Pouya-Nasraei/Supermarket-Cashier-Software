@@ -17,6 +17,7 @@ class CashierApp:
         self.products = load_products()
         self.shopping_cart = {}
         self.total_price = 0
+        self.final_price = 0
 
         self.create_gui()
 
@@ -57,7 +58,13 @@ class CashierApp:
             "Membership", "Enter membership (Gold/Silver/Bronze):"
         )
 
-        if not membership:
+        if membership.strip() == "":
+            self.final_price = self.total_price
+            self.final_label.config(
+                text=f"Final Price: £{self.final_price:.2f}"
+            )
+
+            logger.info("No membership applied. Final price: %.2f", self.final_price)
             return
 
         membership = membership.strip().upper()
@@ -74,20 +81,16 @@ class CashierApp:
             messagebox.showerror("Error", "Invalid membership type.")
             return
 
-        final_price = self.total_price * (1 - discount)
+
+        self.final_price = self.total_price * (1 - discount)
 
         self.final_label.config(
-            text=f"Final Price: £{final_price:.2f}"
+            text=f"Final Price: £{self.final_price:.2f}"
         )
-
-        save_receipt(
-            self.shopping_cart,
-            self.total_price,
-            final_price
-        )
-
+        
         logger.info("Discount applied (%s). Final price: %.2f",
-                    membership, final_price)
+                    membership, self.final_price)
+
 
     def update_display(self):
 
@@ -109,6 +112,14 @@ class CashierApp:
         self.quantity_entry.delete(0, tk.END)
 
         self.product_entry.focus()
+        
+    def clear_cart(self):
+
+        self.shopping_cart.clear()
+        self.total_price = 0
+        self.update_display()
+        self.final_label.config(text="Final Price will appear here")
+        logger.info("Cart cleared")
 
     def create_gui(self):
 
@@ -161,5 +172,11 @@ class CashierApp:
         )
 
         self.final_label.pack(pady=15)
+        
+        tk.Button(
+            self.root,
+            text="Save Bill and start New Bill",
+            command=lambda: [save_receipt(self.shopping_cart, self.total_price, self.final_price), self.clear_cart()]
+        ).pack(pady=10)
 
         self.product_entry.focus()
