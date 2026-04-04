@@ -33,7 +33,7 @@ def save_receipt(cart, total_price, final_price):
         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "items": cart,
         "total_before_discount": total_price,
-        "final_price": final_price
+        "final_price": round(final_price, 2)
     }
 
     with open(filename, "w") as file:
