@@ -131,8 +131,8 @@ class CashierApp:
 
         self.quantity_entry = tk.Entry(frame)
         self.quantity_entry.grid(row=1, column=1)
-
-        self.quantity_entry.bind("<Return>", lambda event: self.add_product)
+        self.quantity_entry.bind("<Return>", lambda event: self.product_entry.focus())
+        self.quantity_entry.bind("<Return>", lambda event: self.add_product())
 
         tk.Button(
             self.root,
