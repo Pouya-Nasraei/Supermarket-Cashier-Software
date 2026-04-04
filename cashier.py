@@ -61,7 +61,7 @@ class CashierApp:
         if membership.strip() == "":
             self.final_price = self.total_price
             self.final_label.config(
-                text=f"Final Price: £{self.final_price:.2f}"
+                text=f"Final Price (No Membership): £{self.final_price:.2f}"
             )
 
             logger.info("No membership applied. Final price: %.2f", self.final_price)
