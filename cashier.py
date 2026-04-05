@@ -127,10 +127,10 @@ class CashierApp:
             self.root,
             text="Customer Bill",
             font=("Arial", 16, "bold")
-        ).pack(pady=10)
+        ).pack(pady=15)
 
         frame = tk.Frame(self.root)
-        frame.pack(pady=10)
+        frame.pack(pady=15)
 
         tk.Label(frame, text="Product").grid(row=0, column=0, padx=10)
 
@@ -149,7 +149,7 @@ class CashierApp:
             self.root,
             text="Add Product",
             command=self.add_product
-        ).pack(pady=10)
+        ).pack(pady=15)
 
         self.display_label = tk.Label(
             self.root,
@@ -157,13 +157,13 @@ class CashierApp:
             justify="left"
         )
 
-        self.display_label.pack(pady=10)
+        self.display_label.pack(pady=15)
 
         tk.Button(
             self.root,
             text="Apply Membership",
             command=self.apply_discount
-        ).pack(pady=10)
+        ).pack(pady=15)
 
         self.final_label = tk.Label(
             self.root,
@@ -173,10 +173,20 @@ class CashierApp:
 
         self.final_label.pack(pady=15)
         
+        
+        frame2 = tk.Frame(self.root)
+        frame2.pack(pady=15)
+        
         tk.Button(
-            self.root,
-            text="Save Bill and start New Bill",
+            frame2,
+            text="Save Bill and Start New Bill",
             command=lambda: [save_receipt(self.shopping_cart, self.total_price, self.final_price), self.clear_cart()]
-        ).pack(pady=10)
+        ).pack(side="left", padx=15)
+        
+        tk.Button(
+            frame2,
+            text="Clear Cart and Start New Bill",
+            command=self.clear_cart
+        ).pack(side="left", padx=15)
 
         self.product_entry.focus()
